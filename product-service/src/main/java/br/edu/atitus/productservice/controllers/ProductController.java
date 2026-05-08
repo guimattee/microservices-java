@@ -1,6 +1,8 @@
 package br.edu.atitus.productservice.controllers;
 
 
+import br.edu.atitus.productservice.clients.CurrencyClient;
+import br.edu.atitus.productservice.clients.CurrencyResponse;
 import br.edu.atitus.productservice.dtos.ProductDTO;
 import br.edu.atitus.productservice.entities.ProductEntity;
 import br.edu.atitus.productservice.repositories.ProductRepository;
@@ -15,12 +17,14 @@ import org.springframework.web.server.ResponseStatusException;
 public class ProductController {
 
     private final ProductRepository repository;
+    private final CurrencyClient currencyClient;
 
     @Value("${server.port}")
     private String port;
 
-    public ProductController(ProductRepository repository) {
+    public ProductController(ProductRepository repository, CurrencyClient currencyClient) {
         this.repository = repository;
+        this.currencyClient = currencyClient;
     }
     @GetMapping("/{idproduct}")
 
@@ -30,17 +34,31 @@ public class ProductController {
         Double convertedPrice = null;
         String environment = "Product-service running on Port: " + port;
 
-        ProductEntity product = repository.findById(idproduct)
+        ProductEntity entity = repository.findById(idproduct)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Recurso não encontrado"));
 
+        if(targetCurrency.equals(entity.getCurrency())) {
+            convertedPrice = entity.getPrice();
+        } else {
+            CurrencyResponse currency = currencyClient.getCurrency(entity.getCurrency(), targetCurrency);
+            convertedPrice = entity.getPrice() * currency.conversionRate();
+            environment = environment + " - " + currency.environment();
+        }
+
+
+        CurrencyResponse currency = currencyClient.getCurrency(entity.getCurrency(), targetCurrency);
+
+
+
+
         ProductDTO dto = new ProductDTO(
-                product.getId(),
-                product.getDescription(),
-                product.getBrand(),
-                product.getModel(),
-                product.getPrice(),
-                product.getCurrency(),
-                product.getStock(),
+                entity.getId(),
+                entity.getDescription(),
+                entity.getBrand(),
+                entity.getModel(),
+                entity.getPrice(),
+                entity.getCurrency(),
+                entity.getStock(),
                 environment,
                 convertedPrice,
                 targetCurrency
