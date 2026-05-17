@@ -41,7 +41,7 @@ public class ProductController {
             convertedPrice = entity.getPrice();
         } else {
             CurrencyResponse currency = currencyClient.getCurrency(entity.getCurrency(), targetCurrency);
-            convertedPrice = entity.getPrice() * currency.conversionRate();
+            convertedPrice = entity.getPrice() * currency.convertionRate();
             environment = environment + " - " + currency.environment();
         }
 
