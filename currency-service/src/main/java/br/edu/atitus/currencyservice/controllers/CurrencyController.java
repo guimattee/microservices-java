@@ -20,6 +20,9 @@ public class CurrencyController {
     @Value("${server.port}")
     private String port;
 
+    @Value("${convert.sleep:0}")
+    private int sleep;
+
     public CurrencyController(CurrencyRepository repository) {
         this.repository = repository;
     }
@@ -28,6 +31,9 @@ public class CurrencyController {
     public ResponseEntity<CurrencyDTO> getConvert(
             @RequestParam String source,
             @RequestParam String target) throws Exception {
+
+        Thread.sleep(sleep);
+
         source = source.toUpperCase();
         target = target.toUpperCase();
         CurrencyEntity currency = repository.findBySourceCurrencyAndTargetCurrency(source, target)
@@ -43,5 +49,6 @@ public class CurrencyController {
 
 
         return ResponseEntity.ok(dto);
+        //return ResponseEntity.badRequest().body(dto);
     }
 }
